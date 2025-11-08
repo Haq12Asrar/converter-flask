@@ -1,127 +1,82 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>FileConvert — Simple Converter</title>
-     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1558476577024315"
-     crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FileConvert — Simple Converter</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <main class="app">
-    <header class="app-header">
-      <div class="brand">
-        <div class="logo">FC</div>
-        <div class="title">FileConvert</div>
-      </div>
-      <label class="theme-switch">
-        <input id="theme-toggle" type="checkbox">
-        <span class="switch-track">
-          <i class="fas fa-sun"></i>
-          <i class="fas fa-moon"></i>
-          <span class="switch-thumb"></span>
-        </span>
-      </label>
-    </header>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <i class="fas fa-moon" id="themeIcon"></i>
+    </div>
 
     <section class="hero">
-      <h1>Fast File Conversions</h1>
-      <p class="subtitle">Upload a file, choose a format and download instantly. Supports PDF, Word, Excel, PPT, images and more.</p>
+      <h1>🌐 FileConvert</h1>
+      <p>Fast and free file conversions — PDF, DOCX, PPTX and more.</p>
     </section>
 
     <section class="converter">
       <form id="convertForm" action="{{ url_for('convert_file') }}" method="post" enctype="multipart/form-data" class="card">
-        <div class="file-input-wrap">
-          <input id="file" name="file" type="file" required onchange="updateFormats()">
-          <label for="file" class="file-label">
-            <div class="file-icon"><i class="fas fa-upload"></i></div>
-            <div class="file-text">
-              <div class="file-title">Select or drop a file</div>
-              <div class="file-sub">PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT, CSV</div>
-            </div>
-          </label>
-          <div class="chosen-name label-text">No file chosen</div>
+        <input id="file" name="file" type="file" required onchange="previewFile()">
+        <div class="preview-box" id="previewBox">
+          <p><strong>Preview:</strong></p>
+          <img id="previewImage" alt="Preview">
+          <p id="fileName"></p>
         </div>
-
-        <div class="controls">
-          <label for="target_format" class="vis-label">Convert to</label>
-          <select id="target_format" name="target_format" required>
-            <option value="">Select format</option>
-          </select>
-          <button type="submit" class="btn primary" id="convertBtn"><i class="fas fa-arrow-right"></i> Convert</button>
-        </div>
+        <select id="target_format" name="target_format" required>
+          <option value="">Select format</option>
+          <option value="docx">DOCX</option>
+          <option value="pdf">PDF</option>
+          <option value="pptx">PPTX</option>
+        </select>
+        <button type="submit" class="btn primary">Convert</button>
       </form>
-
-      <div class="notes">
-        <strong>Quick tips:</strong>
-        <ul>
-          <li>No login or history — files are processed and removed.</li>
-          <li>Max file size: 32 MB.</li>
-          <li>If a conversion fails, you'll get a clear error message.</li>
-        </ul>
-      </div>
     </section>
-
-    <div id="toast" class="toast"></div>
   </main>
 
   <script>
-    // Theme initialization and toggle
-    const html = document.documentElement;
-    const themeToggle = document.getElementById('theme-toggle');
-    const saved = localStorage.getItem('theme');
-    if (saved) { html.setAttribute('data-theme', saved); themeToggle.checked = saved === 'dark'; }
-    else { const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; html.setAttribute('data-theme', dark ? 'dark' : 'light'); themeToggle.checked = dark; }
-    themeToggle.addEventListener('change', e => { const t = e.target.checked ? 'dark' : 'light'; html.setAttribute('data-theme', t); localStorage.setItem('theme', t); });
-
-    // Format map (kept small here)
-    const formatMap = {
-      'pdf': ['docx','txt'],
-      'docx': ['pdf','txt'],
-      'xlsx': ['csv','pdf','txt'],
-      'xls': ['xlsx','csv','pdf','txt'],
-      'csv': ['xlsx','txt','pdf'],
-      'pptx': ['pdf','txt'],
-      'jpg': ['png','pdf','webp'],
-      'jpeg': ['png','pdf','webp'],
-      'png': ['jpg','pdf','webp'],
-      'webp': ['jpg','png','pdf'],
-      'txt': ['pdf','docx']
-    };
-
-    function updateFormats(){
-      const f = document.getElementById('file');
-      const sel = document.getElementById('target_format');
-      const nameEl = document.querySelector('.chosen-name');
-      sel.innerHTML = '<option value="">Select format</option>';
-      if (f.files && f.files.length){
-        const name = f.files[0].name; nameEl.textContent = name;
-        const ext = name.split('.').pop().toLowerCase();
-        (formatMap[ext]||[]).forEach(x=>{ const o=document.createElement('option'); o.value=x; o.textContent=x.toUpperCase(); sel.appendChild(o); });
-      } else { nameEl.textContent = 'No file chosen'; }
+    // Theme toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById("themeIcon");
+      const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+      html.setAttribute("data-theme", newTheme);
+      localStorage.setItem("theme", newTheme);
+      icon.className = newTheme === "dark" ? "fas fa-sun" : "fas fa-moon";
     }
 
-    // Simple toast
-    function showToast(msg, kind='info'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+kind; setTimeout(()=>t.className='toast',3000); }
-
-    // Submit handler: fetch blob and download
-    document.getElementById('convertForm').addEventListener('submit', function(e){
-      e.preventDefault();
-      const btn = document.getElementById('convertBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Converting';
-      const fd = new FormData(this);
-      fetch(this.action,{method:'POST',body:fd})
-        .then(r=>r.blob().then(b=>({ok:r.ok, type:b.type, data:b, status:r.status})))
-        .then(obj=>{
-          if (!obj.ok){ return obj.data.text().then(t=>{ let json; try{json=JSON.parse(t);}catch(e){json={error:t}}; throw new Error(json.error||'Conversion failed'); }); }
-          const url = URL.createObjectURL(obj.data);
-          const a = document.createElement('a'); a.href=url; const fname = fd.get('file').name.split('.')[0] + '.' + document.getElementById('target_format').value; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showToast('Download ready','success');
-        })
-        .catch(err=>{ console.error(err); showToast(err.message||'Error','error'); })
-        .finally(()=>{ btn.disabled=false; btn.innerHTML='<i class="fas fa-arrow-right"></i> Convert'; document.getElementById('convertForm').reset(); document.querySelector('.chosen-name').textContent='No file chosen'; document.getElementById('target_format').innerHTML='<option value="">Select format</option>'; });
+    // Load saved theme
+    document.addEventListener("DOMContentLoaded", () => {
+      const saved = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.getElementById("themeIcon").className = saved === "dark" ? "fas fa-sun" : "fas fa-moon";
     });
+
+    // Preview uploaded file
+    function previewFile() {
+      const file = document.getElementById("file").files[0];
+      const box = document.getElementById("previewBox");
+      const img = document.getElementById("previewImage");
+      const name = document.getElementById("fileName");
+
+      if (!file) return (box.style.display = "none");
+      name.textContent = file.name;
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          img.src = e.target.result;
+          box.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        img.src = "";
+        box.style.display = "block";
+      }
+    }
   </script>
 </body>
 </html>
