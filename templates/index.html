@@ -3,79 +3,271 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FileConvert — Simple Converter</title>
+  <title>FileConvert — Smart File Converter</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1558476577024315" crossorigin="anonymous"></script>
+  
+  <!-- Make sure the path to static files is correct -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <main class="app">
-    <div class="theme-toggle" onclick="toggleTheme()">
-      <i class="fas fa-moon" id="themeIcon"></i>
-    </div>
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo">FC</div>
+        <div class="title">FileConvert</div>
+      </div>
+      <label class="theme-switch">
+        <input id="theme-toggle" type="checkbox">
+        <span class="switch-track">
+          <i class="fas fa-sun"></i>
+          <i class="fas fa-moon"></i>
+          <span class="switch-thumb"></span>
+        </span>
+      </label>
+    </header>
 
     <section class="hero">
-      <h1>🌐 FileConvert</h1>
-      <p>Fast and free file conversions — PDF, DOCX, PPTX and more.</p>
+      <h1>Convert Any File Instantly</h1>
+      <p class="subtitle">Fast and secure — no login required. Supports PDF, Images, and more.</p>
     </section>
 
     <section class="converter">
       <form id="convertForm" action="{{ url_for('convert_file') }}" method="post" enctype="multipart/form-data" class="card">
-        <input id="file" name="file" type="file" required onchange="previewFile()">
-        <div class="preview-box" id="previewBox">
-          <p><strong>Preview:</strong></p>
-          <img id="previewImage" alt="Preview">
-          <p id="fileName"></p>
+        <div class="file-input-wrap">
+          <!-- The 'hidden' class is added to the actual input -->
+          <input id="file" name="file" type="file" required onchange="updateFormats(); previewFile();" class="hidden">
+          
+          <label for="file" class="file-label">
+            <div class="file-icon"><i class="fas fa-upload"></i></div>
+            <div class="file-text">
+              <div class="file-title">Select or drop a file</div>
+              <div class="file-sub">PDF, JPG, PNG...</div>
+            </div>
+          </label>
+          <div class="chosen-name label-text">No file chosen</div>
         </div>
-        <select id="target_format" name="target_format" required>
-          <option value="">Select format</option>
-          <option value="docx">DOCX</option>
-          <option value="pdf">PDF</option>
-          <option value="pptx">PPTX</option>
-        </select>
-        <button type="submit" class="btn primary">Convert</button>
+
+        <div id="preview" class="preview hidden">
+          <h3>Preview:</h3>
+          <img id="preview-img" class="preview-img hidden" />
+          <iframe id="preview-pdf" class="preview-pdf hidden"></iframe>
+          <div id="preview-text" class="preview-text hidden"></div>
+        </div>
+
+        <div class="controls">
+          <label for="target_format" class="vis-label">Convert to</label>
+          <select id="target_format" name="target_format" required>
+            <option value="">Select format</option>
+          </select>
+          <button type="submit" class="btn primary" id="convertBtn">
+            <i class="fas fa-arrow-right"></i> Convert
+          </button>
+        </div>
       </form>
+
+      <div id="progress" class="progress hidden">
+        <div class="progress-bar"></div>
+      </div>
+
+      <div class="notes">
+        <strong>Tips:</strong>
+        <ul>
+          <li>Files are deleted after processing — secure and private.</li>
+          <li>Max file size: 32 MB.</li>
+        </ul>
+      </div>
     </section>
+
+    <div id="toast" class="toast"></div>
   </main>
 
   <script>
-    // Theme toggle
-    function toggleTheme() {
-      const html = document.documentElement;
-      const icon = document.getElementById("themeIcon");
-      const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
-      html.setAttribute("data-theme", newTheme);
-      localStorage.setItem("theme", newTheme);
-      icon.className = newTheme === "dark" ? "fas fa-sun" : "fas fa-moon";
-    }
-
-    // Load saved theme
-    document.addEventListener("DOMContentLoaded", () => {
-      const saved = localStorage.getItem("theme") || "light";
-      document.documentElement.setAttribute("data-theme", saved);
-      document.getElementById("themeIcon").className = saved === "dark" ? "fas fa-sun" : "fas fa-moon";
+    // 🌓 Theme toggle
+    const html = document.documentElement;
+    const themeToggle = document.getElementById('theme-toggle');
+    const saved = localStorage.getItem('theme');
+    if (saved) html.setAttribute('data-theme', saved);
+    themeToggle.checked = saved === 'dark';
+    themeToggle.addEventListener('change', () => {
+      const t = themeToggle.checked ? 'dark' : 'light';
+      html.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
     });
 
-    // Preview uploaded file
-    function previewFile() {
-      const file = document.getElementById("file").files[0];
-      const box = document.getElementById("previewBox");
-      const img = document.getElementById("previewImage");
-      const name = document.getElementById("fileName");
+    // 🔁 Format mapping
+    // --- THIS IS THE CRITICAL FIX ---
+    // Removed 'docx' and 'pptx' from the *source* keys,
+    // as our app.py doesn't support converting FROM them.
+    const formatMap = {
+      'pdf': ['docx', 'pptx'],
+      'jpg': ['pdf'],
+      'jpeg': ['pdf'],
+      'png': ['pdf']
+    };
 
-      if (!file) return (box.style.display = "none");
-      name.textContent = file.name;
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          img.src = e.target.result;
-          box.style.display = "block";
-        };
-        reader.readAsDataURL(file);
+    function updateFormats() {
+      const fileInput = document.getElementById('file');
+      const select = document.getElementById('target_format');
+      const label = document.querySelector('.chosen-name');
+      select.innerHTML = '<option value="">Select format</option>';
+
+      if (fileInput.files.length) {
+        const name = fileInput.files[0].name;
+        label.textContent = name;
+        const ext = name.split('.').pop().toLowerCase();
+        
+        // Check if the extension is in our map
+        if (formatMap[ext]) {
+            formatMap[ext].forEach(fmt => {
+              const o = document.createElement('option');
+              o.value = fmt;
+              o.textContent = fmt.toUpperCase();
+              select.appendChild(o);
+            });
+        } else {
+            // If the file type is not supported
+            label.textContent = `File type ".${ext}" not supported.`;
+            select.innerHTML = '<option value="">No formats</option>';
+        }
       } else {
-        img.src = "";
-        box.style.display = "block";
+        label.textContent = 'No file chosen';
       }
+    }
+
+    // 🖼 File preview
+    function previewFile() {
+      const file = document.getElementById('file').files[0];
+      const preview = document.getElementById('preview');
+      const img = document.getElementById('preview-img');
+      const pdf = document.getElementById('preview-pdf');
+      const text = document.getElementById('preview-text');
+
+      // Hide all preview elements first
+      img.classList.add('hidden');
+      pdf.classList.add('hidden');
+      text.classList.add('hidden');
+      
+      if (!file) {
+        preview.classList.add('hidden'); // Hide the whole preview section
+        return;
+      }
+      
+      // Show the preview section
+      preview.classList.remove('hidden');
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      const reader = new FileReader();
+
+      if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
+        reader.onload = e => { img.src = e.target.result; img.classList.remove('hidden'); };
+        reader.readAsDataURL(file);
+      } else if (ext === 'pdf') {
+        reader.onload = e => { pdf.src = e.target.result; pdf.classList.remove('hidden'); };
+        reader.readAsDataURL(file);
+      } else if (ext === 'txt') {
+        reader.onload = e => { text.textContent = e.target.result.slice(0, 500); text.classList.remove('hidden'); };
+        reader.readAsText(file);
+      } else {
+        text.textContent = "Preview not available for this file type.";
+        text.classList.remove('hidden');
+      }
+    }
+
+    // 🚀 Conversion progress + download
+    const form = document.getElementById('convertForm');
+    const btn = document.getElementById('convertBtn');
+    const progress = document.getElementById('progress');
+    const bar = document.querySelector('.progress-bar');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('file');
+      const select = document.getElementById('target_format');
+
+      // Validation check
+      if (!fileInput.files.length || !select.value) {
+        showToast('❌ Please select a file and a format.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      progress.classList.remove('hidden');
+      bar.style.width = '20%';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+
+      const fd = new FormData(form);
+      fetch(form.action, { method: 'POST', body: fd })
+        .then(response => {
+            // Check if the response is OK (status 200-299)
+            if (response.ok) {
+                // Try to get the filename from headers first
+                const disposition = response.headers.get('content-disposition');
+                let filename = fd.get('file').name.split('.')[0] + '.' + document.getElementById('target_format').value;
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                // Return blob and extracted filename
+                return response.blob().then(blob => ({ blob, filename, ok: true }));
+            } else {
+                // If response is not OK, read text error message
+                return response.text().then(text => ({ error: text, ok: false }));
+            }
+        })
+        .then(result => {
+          if (result.ok) {
+            // --- SUCCESS ---
+            bar.style.width = '90%';
+            const url = URL.createObjectURL(result.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = result.filename; // Use the filename from response
+            document.body.appendChild(a); // Append to body for Firefox
+            a.click();
+            a.remove(); // Clean up
+            URL.revokeObjectURL(url);
+            
+            bar.style.width = '100%';
+            showToast('✅ Conversion Complete', 'success');
+          } else {
+            // --- FAILURE ---
+            // Show the error message from the server
+            // We strip HTML tags from the error for a cleaner toast
+            const errorText = result.error.replace(/<[^>]*>?/gm, '');
+            showToast(`❌ ${errorText}`, 'error');
+          }
+        })
+        .catch(err => {
+            // Network error or other fetch-related issues
+            console.error('Fetch error:', err);
+            showToast('❌ Network error. Please try again.', 'error');
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-arrow-right"></i> Convert';
+          // Reset progress bar
+          setTimeout(() => {
+            progress.classList.add('hidden');
+            bar.style.width = '0%';
+          }, 1000);
+        });
+    });
+
+    // 🔔 Toast
+    function showToast(msg, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      // Set class based on type
+      toast.className = `toast show ${type === 'error' ? 'error' : 'success'}`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
   </script>
 </body>

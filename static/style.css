@@ -1,74 +1,352 @@
+/* --- Base Variables & New Gradient Style --- */
 :root {
-  --bg-light: #f5f6fa;
-  --bg-dark: #0d1117;
-  --text-light: #111;
-  --text-dark: #eee;
-  --card-light: #fff;
-  --card-dark: #161b22;
-  --accent: #4f46e5;
+  --bg: #f7f9fc;
+  --text: #222;
+  --card: #fff;
+  /* New Gradient & Color */
+  --accent-gradient: linear-gradient(45deg, #007bff, #00b4ff);
+  --accent-color: #007bff; /* Fallback & border color */
+  --border: #ddd;
+  --success: #28a745;
+  --error: #dc3545;
 }
 
-[data-theme="light"] {
-  --bg: var(--bg-light);
-  --text: var(--text-light);
-  --card: var(--card-light);
+[data-theme='dark'] {
+  --bg: #121212;
+  --text: #eee;
+  --card: #1e1e1e;
+  /* Dark mode gradient */
+  --accent-gradient: linear-gradient(45deg, #00b4ff, #007bff);
+  --accent-color: #00b4ff;
+  --border: #333;
 }
-
-[data-theme="dark"] {
-  --bg: var(--bg-dark);
-  --text: var(--text-dark);
-  --card: var(--card-dark);
-}
+/* --- --- */
 
 body {
-  font-family: "Inter", sans-serif;
-  background-color: var(--bg);
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
   color: var(--text);
   margin: 0;
-  padding: 0;
-  transition: 0.3s ease all;
+  padding: 0 1rem; /* Add padding for mobile */
+  transition: background 0.3s, color 0.3s;
+  box-sizing: border-box;
 }
 
-.card {
-  background: var(--card);
-  border-radius: 12px;
-  padding: 1.5em;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.app {
   max-width: 600px;
-  margin: auto;
+  margin: 0 auto;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0; /* Changed padding */
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo {
+  background: var(--accent-gradient); /* Use Gradient */
+  color: #fff;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .hero {
   text-align: center;
-  padding: 2em 0;
+  margin: 2rem auto;
 }
 
-.btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 0.7em 1.5em;
-  border-radius: 8px;
+.hero h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.card {
+  background: var(--card);
+  padding: 1.5rem 2rem; /* Adjusted padding */
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+  border: 1px solid var(--border);
+}
+
+[data-theme='dark'] .card {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.file-input-wrap {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* --- ADDED: Styles for file input text --- */
+.label-text {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.file-label {
+  display: flex; /* Changed to flex */
+  align-items: center;
+  justify-content: center;
+  gap: 1rem; /* Added gap */
+  border: 2px dashed var(--accent-color); /* Use Color */
+  padding: 1.5rem; /* Adjusted padding */
+  border-radius: 1rem;
   cursor: pointer;
+  background: rgba(0, 123, 255, 0.03);
+  transition: 0.3s;
+}
+
+/* --- ADDED: Dark mode support for file label --- */
+[data-theme='dark'] .file-label {
+  background: rgba(0, 180, 255, 0.05);
+}
+
+.file-label:hover {
+  background: rgba(0, 123, 255, 0.1);
+}
+
+[data-theme='dark'] .file-label:hover {
+  background: rgba(0, 180, 255, 0.15);
+}
+
+/* --- ADDED: Styles for file icon and text --- */
+.file-icon {
+  font-size: 1.5rem;
+  color: var(--accent-color);
+}
+.file-text {
+  text-align: left;
+}
+.file-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.file-sub {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+/* --- --- */
+
+
+.controls {
+  display: flex; /* Use flexbox for alignment */
+  justify-content: center;
+  align-items: center;
+  gap: 1rem; /* Add gap between items */
+  margin-top: 1rem;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+/* --- ADDED: Style for "Convert to" label --- */
+.vis-label {
   font-weight: 600;
 }
 
-.preview-box {
-  display: none;
-  margin-top: 1em;
-  text-align: center;
+/* Style for the <select> dropdown */
+select {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
 }
 
-.preview-box img {
-  max-width: 200px;
-  margin-top: 10px;
-  border-radius: 6px;
-}
-
-.theme-toggle {
-  position: fixed;
-  right: 20px;
-  top: 20px;
-  font-size: 1.5em;
+.btn.primary {
+  background: var(--accent-gradient); /* Use Gradient */
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
+  transition: 0.3s;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.btn.primary:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.btn.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.progress {
+  margin: 1.5rem auto;
+  width: 100%; /* Full width */
+  height: 10px;
+  background: var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  width: 0%;
+  height: 100%;
+  background: var(--accent-gradient); /* Use Gradient */
+  transition: width 0.4s ease;
+}
+
+.preview {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.preview h3 {
+  margin-top: 0;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.preview-img {
+  max-width: 100%; /* Make image responsive */
+  height: auto;
+  max-height: 250px;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.preview-pdf {
+  width: 100%;
+  height: 250px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.preview-text {
+  background: var(--bg); /* Use bg color */
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 14px;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.notes {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.notes ul {
+  padding-left: 20px;
+  margin: 0.5rem 0 0 0;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  /* Base style is success */
+  background: var(--success);
+  color: #fff;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+/* --- ADDED: Error state for toast --- */
+.toast.error {
+  background: var(--error);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hidden {
+  display: none;
+}
+
+
+/* --- ADDED: Theme Switch Styles --- */
+/* These were missing from your file but present in your HTML */
+.theme-switch {
+  display: inline-block;
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-track {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px;
+}
+.switch-track .fa-sun { color: #f39c12; }
+.switch-track .fa-moon { color: #f1c40f; }
+
+.switch-thumb {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  height: 20px;
+  width: 20px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .switch-track {
+  background: #555; /* Dark mode track color */
+}
+
+input:checked + .switch-track .switch-thumb {
+  transform: translateX(24px);
 }
